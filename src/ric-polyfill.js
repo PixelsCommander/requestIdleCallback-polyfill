@@ -15,7 +15,7 @@ var applyPolyfill = function () {
     var callbacks = [];
     var lastInteractionTime = Date.now();
     var deadline = {
-        timeRemaining: 0
+        timeRemaining: IDLE_ENOUGH_DELAY
     };
 
     var isFree = function () {
@@ -23,6 +23,7 @@ var applyPolyfill = function () {
     }
 
     var onContinousInteraction = function (interactionName) {
+        deadline.timeRemaining = 0;
         lastInteractionTime = Date.now();
 
         if (!timeout) {
@@ -30,6 +31,10 @@ var applyPolyfill = function () {
         }
     }
 
+    //Consider categorizing last interaction timestamp in order to add cancelling events like touchend, touchleave, touchcancel, mouseup, mouseout, mouseleave
+    document.addEventListener('keydown', onContinousInteraction.bind(this, 'keydown'));
+    document.addEventListener('mousedown', onContinousInteraction.bind(this, 'mousedown'));
+    document.addEventListener('touchstart', onContinousInteraction.bind(this, 'toucstart'));
     document.addEventListener('touchmove', onContinousInteraction.bind(this, 'touchmove'));
     document.addEventListener('mousemove', onContinousInteraction.bind(this, 'mousemove'));
     document.addEventListener('scroll', onContinousInteraction.bind(this, 'scroll'));
@@ -44,7 +49,6 @@ var applyPolyfill = function () {
     }
 
     var timeoutCompleted = function () {
-        //console.log('Timeout completed' + Date.now());
         var expectedEndTime = lastInteractionTime + IDLE_ENOUGH_DELAY;
         var delta = expectedEndTime - Date.now();
 
@@ -55,26 +59,27 @@ var applyPolyfill = function () {
         }
     }
 
-    //TODO support timeout, save pairs timeout/callbacks and remove pairs
     var addCallback = function (callback, timeout) {
         callbacks.push({
             callback: callback,
-            timeout: timeout !== undefined ? setTimeout(executeCallback.bind(this, callback), timeout) : undefined
+            timeout: timeout !== undefined ? setTimeout(executeCallback.bind(this, {callback: callback}), timeout) : undefined
         });
     }
 
     var executeCallback = function (callbackObject) {
-        callbackObject.callback(deadline);
+        callbacks.splice(callbacks.indexOf(callbackObject), 1);
+        setTimeout(function () {
+            callbackObject.callback(deadline);
+        }, 0);
         clearTimeout(callbackObject.timeout);
         callbackObject.timeout = null;
-        callbackObject
     }
 
     return function (callback, timeout) {
         if (isFree()) {
             executeCallback(callback);
         } else {
-            addCallback(callback);
+            addCallback(callback, timeout);
         }
     };
 };
