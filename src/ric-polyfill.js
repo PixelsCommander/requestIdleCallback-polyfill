@@ -11,7 +11,7 @@
 var applyPolyfill = function () {
     //By default we may assume that user stopped interaction if we are idle for 100 miliseconds
     var IDLE_ENOUGH_DELAY = 100;
-    var timeout = null;
+    var timeout;
     var callbacks = [];
     var lastInteractionTime = Date.now();
     var deadline = {
@@ -19,7 +19,7 @@ var applyPolyfill = function () {
     };
 
     var isFree = function () {
-        return timeout;
+        return timeout === null;
     }
 
     var onContinousInteraction = function (interactionName) {
@@ -77,7 +77,10 @@ var applyPolyfill = function () {
 
     return function (callback, timeout) {
         if (isFree()) {
-            executeCallback(callback);
+            executeCallback({
+                callback: callback,
+                timeout: timeout
+            });
         } else {
             addCallback(callback, timeout);
         }
