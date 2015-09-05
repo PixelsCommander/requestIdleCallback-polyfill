@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="../src/ric-polyfill.js"></script>
+</head>
+<body style="width: 9000px; height: 9000px;">
+
+</body>
+<script>
+    requestIdleCallback(function(){
+        console.log('Became free' + Date.now());
+    }, 2000);
+</script>
+</html>
