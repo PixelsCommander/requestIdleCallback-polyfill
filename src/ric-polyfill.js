@@ -10,7 +10,7 @@
 
 var applyPolyfill = function () {
     //By default we may assume that user stopped interaction if we are idle for 100 miliseconds
-    var IDLE_ENOUGH_DELAY = 100;
+    var IDLE_ENOUGH_DELAY = 200;
     var timeout;
     var callbacks = [];
     var lastInteractionTime = Date.now();
@@ -87,4 +87,5 @@ var applyPolyfill = function () {
     };
 };
 
+window.requestIdleUICallback = applyPolyfill();
 window.requestIdleCallback = window.requestIdleCallback || applyPolyfill();
