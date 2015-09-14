@@ -1,8 +1,8 @@
 {
   "name": "ric",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "requestIdleCallback polyfill",
-  "main": "index.js",
+  "main": "./src/ric-polyfill.js",
   "directories": {
     "example": "example"
   },
