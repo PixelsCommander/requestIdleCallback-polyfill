@@ -11,7 +11,7 @@
 var applyPolyfill = function () {
     //By default we may assume that user stopped interaction if we are idle for 100 miliseconds
     var IDLE_ENOUGH_DELAY = 300;
-    var timeout;
+    var timeout = null;
     var callbacks = [];
     var lastInteractionTime = Date.now();
     var deadline = {
@@ -67,12 +67,18 @@ var applyPolyfill = function () {
     }
 
     var executeCallback = function (callbackObject) {
-        callbacks.splice(callbacks.indexOf(callbackObject), 1);
-        setTimeout(function () {
-            callbackObject.callback(deadline);
-        }, 0);
-        clearTimeout(callbackObject.timeout);
-        callbackObject.timeout = null;
+        var callbackIndex = callbacks.indexOf(callbackObject);
+
+        if (callbackIndex !== -1) {
+            callbacks.splice(callbacks.indexOf(callbackObject), 1);
+        }
+
+        callbackObject.callback(deadline);
+
+        if (callbackObject.timeout) {
+            clearTimeout(callbackObject.timeout);
+            callbackObject.timeout = null;
+        }
     }
 
     return function (callback, timeout) {
