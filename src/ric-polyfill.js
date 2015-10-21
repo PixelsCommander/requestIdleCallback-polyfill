@@ -23,8 +23,6 @@ var applyPolyfill = function () {
     }
 
     var onContinousInteractionStarts = function (interactionName) {
-        console.log(interactionName + ' started');
-
         deadline.timeRemaining = 0;
         lastInteractionTime = Date.now();
 
@@ -62,13 +60,18 @@ var applyPolyfill = function () {
         }
     }
 
-    var addCallback = function (callback, timeout) {
+    var createCallbackObject = function (callback, timeout) {
         var callbackObject = {
             callback: callback,
             timeoutId: null
         };
 
         callbackObject.timeoutId = timeout !== undefined ? setTimeout(executeCallback.bind(this, callbackObject), timeout) : null;
+
+        return callbackObject;
+    }
+
+    var addCallback = function (callbackObject, timeout) {
         callbacks.push(callbackObject);
     }
 
@@ -88,15 +91,12 @@ var applyPolyfill = function () {
     }
 
     return function (callback, timeout) {
+        var callbackObject = createCallbackObject(callback, timeout);
+
         if (isFree()) {
-            console.log('RIC isFree executing');
-            executeCallback({
-                callback: callback,
-                timeoutId: timeout
-            });
+            executeCallback(callbackObject);
         } else {
-            console.log('RIC addCallback');
-            addCallback(callback, timeout);
+            addCallback(callbackObject);
         }
     };
 };
