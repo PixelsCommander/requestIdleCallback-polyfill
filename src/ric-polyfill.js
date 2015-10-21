@@ -11,7 +11,7 @@
 var applyPolyfill = function () {
     //By default we may assume that user stopped interaction if we are idle for 300 miliseconds
     var IDLE_ENOUGH_DELAY = 300;
-    var timeout = null;
+    var timeoutId = null;
     var callbacks = [];
     var lastInteractionTime = Date.now();
     var deadline = {
@@ -19,51 +19,57 @@ var applyPolyfill = function () {
     };
 
     var isFree = function () {
-        return timeout === null;
+        return timeoutId === null;
     }
 
-    var onContinousInteraction = function (interactionName) {
+    var onContinousInteractionStarts = function (interactionName) {
+        console.log(interactionName + ' started');
+
         deadline.timeRemaining = 0;
         lastInteractionTime = Date.now();
 
-        if (!timeout) {
-            timeout = setTimeout(timeoutCompleted, IDLE_ENOUGH_DELAY);
+        if (!timeoutId) {
+            timeoutId = setTimeout(timeoutCompleted, IDLE_ENOUGH_DELAY);
         }
     }
 
-    //Consider categorizing last interaction timestamp in order to add cancelling events like touchend, touchleave, touchcancel, mouseup, mouseout, mouseleave
-    document.addEventListener('keydown', onContinousInteraction.bind(this, 'keydown'));
-    document.addEventListener('mousedown', onContinousInteraction.bind(this, 'mousedown'));
-    document.addEventListener('touchstart', onContinousInteraction.bind(this, 'touchstart'));
-    document.addEventListener('touchmove', onContinousInteraction.bind(this, 'touchmove'));
-    document.addEventListener('mousemove', onContinousInteraction.bind(this, 'mousemove'));
-    document.addEventListener('scroll', onContinousInteraction.bind(this, 'scroll'));
-
-    var onContinousInteractionEnd = function (interactionName) {
-        clearTimeout(timeout);
-        timeout = null;
+    var onContinousInteractionEnds = function (interactionName) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
 
         for (var i = 0; i < callbacks.length; i++) {
             executeCallback(callbacks[i])
         }
     }
 
+    //Consider categorizing last interaction timestamp in order to add cancelling events like touchend, touchleave, touchcancel, mouseup, mouseout, mouseleave
+    document.addEventListener('keydown', onContinousInteractionStarts.bind(this, 'keydown'));
+    document.addEventListener('mousedown', onContinousInteractionStarts.bind(this, 'mousedown'));
+    document.addEventListener('touchstart', onContinousInteractionStarts.bind(this, 'touchstart'));
+    document.addEventListener('touchmove', onContinousInteractionStarts.bind(this, 'touchmove'));
+    document.addEventListener('mousemove', onContinousInteractionStarts.bind(this, 'mousemove'));
+    document.addEventListener('scroll', onContinousInteractionStarts.bind(this, 'scroll'), true);
+
+
     var timeoutCompleted = function () {
         var expectedEndTime = lastInteractionTime + IDLE_ENOUGH_DELAY;
         var delta = expectedEndTime - Date.now();
 
         if (delta > 0) {
-            timeout = setTimeout(timeoutCompleted, delta);
+            timeoutId = setTimeout(timeoutCompleted, delta);
         } else {
-            onContinousInteractionEnd();
+            onContinousInteractionEnds();
         }
     }
 
     var addCallback = function (callback, timeout) {
-        callbacks.push({
+        var callbackObject = {
             callback: callback,
-            timeout: timeout !== undefined ? setTimeout(executeCallback.bind(this, {callback: callback}), timeout) : undefined
-        });
+            timeoutId: null
+        };
+
+        callbackObject.timeoutId = timeout !== undefined ? setTimeout(executeCallback.bind(this, callbackObject), timeout) : null;
+        callbacks.push(callbackObject);
     }
 
     var executeCallback = function (callbackObject) {
@@ -75,23 +81,28 @@ var applyPolyfill = function () {
 
         callbackObject.callback(deadline);
 
-        if (callbackObject.timeout) {
-            clearTimeout(callbackObject.timeout);
-            callbackObject.timeout = null;
+        if (callbackObject.timeoutId) {
+            clearTimeout(callbackObject.timeoutId);
+            callbackObject.timeoutId = null;
         }
     }
 
     return function (callback, timeout) {
         if (isFree()) {
+            console.log('RIC isFree executing');
             executeCallback({
                 callback: callback,
-                timeout: timeout
+                timeoutId: timeout
             });
         } else {
+            console.log('RIC addCallback');
             addCallback(callback, timeout);
         }
     };
 };
 
-window.requestIdleUICallback = applyPolyfill();
-window.requestIdleCallback = window.requestIdleCallback || applyPolyfill();
+window.activateUIIdle = function () {
+    window.requestUserIdle = applyPolyfill();
+};
+
+window.requestIdleCallback = window.requestIdleCallback || window.requestIdleUICallback;
