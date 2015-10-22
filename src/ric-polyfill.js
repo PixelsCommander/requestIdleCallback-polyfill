@@ -90,7 +90,8 @@ var applyPolyfill = function () {
         }
     }
 
-    return function (callback, timeout) {
+    return function (callback, options) {
+        var timeout = options.timeout;
         var callbackObject = createCallbackObject(callback, timeout);
 
         if (isFree()) {
