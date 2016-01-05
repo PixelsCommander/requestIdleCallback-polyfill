@@ -48,7 +48,6 @@ var applyPolyfill = function () {
     document.addEventListener('mousemove', onContinousInteractionStarts.bind(this, 'mousemove'));
     document.addEventListener('scroll', onContinousInteractionStarts.bind(this, 'scroll'), true);
 
-
     var timeoutCompleted = function () {
         var expectedEndTime = lastInteractionTime + IDLE_ENOUGH_DELAY;
         var delta = expectedEndTime - Date.now();
@@ -91,7 +90,7 @@ var applyPolyfill = function () {
     }
 
     return function (callback, options) {
-        var timeout = options.timeout;
+        var timeout = options && options.timeout;
         var callbackObject = createCallbackObject(callback, timeout);
 
         if (isFree()) {
