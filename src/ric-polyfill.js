@@ -106,4 +106,4 @@ window.activateUIIdle = function () {
     window.requestUserIdle = applyPolyfill();
 };
 
-window.requestIdleCallback = window.requestIdleCallback || window.requestIdleUICallback;
+window.requestIdleCallback = window.requestIdleCallback || applyPolyfill();
