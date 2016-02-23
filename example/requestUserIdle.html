@@ -35,11 +35,6 @@
         console.log('Became free at ' + Date.now());
     }
 
-
-    //Activates polyfill under window.requestUserIdle even if native requestIdleCallback is available
-    activateUIIdle();
-
-
     setTimeout(function(){
         requestUserIdle(alertIAmFree, {timeout: 2000});
     }, 1000);

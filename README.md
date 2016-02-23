@@ -11,6 +11,12 @@ How polyfill works
 
 Polyfill is built on principe that janks are most harmful to UX and have highest chance to happen when user is continously interacting with UI. Polyfill basically prevents operation from being executed while user performing some actions on interface. Currently this implies scrolls, taps, clicks, mouse and touch movements. The condition is pretty simple - if there were no interactions for 100 msec there is a huge chance that we are in idle.
 
+
+Differnce between requestUserIdle and requestIdleCallback
+---------------------------------------------------------
+
+The difference is that requestUserIdle is always relying on polyfill logic even if requestIdleCallback is implemented natively in browser. This is handy if you just need to wait for UI idle since native requestIdleCallback have different behaviour and fires when main thread becomes idle, not UI.
+
 NPM
 ---
 

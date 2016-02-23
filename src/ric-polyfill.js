@@ -48,6 +48,7 @@ var applyPolyfill = function () {
     document.addEventListener('mousemove', onContinousInteractionStarts.bind(this, 'mousemove'));
     document.addEventListener('scroll', onContinousInteractionStarts.bind(this, 'scroll'), true);
 
+
     var timeoutCompleted = function () {
         var expectedEndTime = lastInteractionTime + IDLE_ENOUGH_DELAY;
         var delta = expectedEndTime - Date.now();
@@ -65,7 +66,7 @@ var applyPolyfill = function () {
             timeoutId: null
         };
 
-        callbackObject.timeoutId = timeout !== undefined ? setTimeout(executeCallback.bind(this, callbackObject), timeout) : null;
+        callbackObject.timeoutId = timeout !== null ? setTimeout(executeCallback.bind(this, callbackObject), timeout) : null;
 
         return callbackObject;
     }
@@ -90,7 +91,7 @@ var applyPolyfill = function () {
     }
 
     return function (callback, options) {
-        var timeout = options && options.timeout;
+        var timeout = (options && options.timeout) || null;
         var callbackObject = createCallbackObject(callback, timeout);
 
         if (isFree()) {
@@ -101,8 +102,9 @@ var applyPolyfill = function () {
     };
 };
 
-window.activateUIIdle = function () {
-    window.requestUserIdle = applyPolyfill();
-};
+if (!window.requestIdleCallback) {
+    window.ricActivated = true;
+    window.requestIdleCallback = applyPolyfill();
+}
 
-window.requestIdleCallback = window.requestIdleCallback || applyPolyfill();
+window.requestUserIdle = window.ricActivated && window.requestIdleCallback || applyPolyfill();
